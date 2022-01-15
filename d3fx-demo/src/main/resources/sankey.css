@@ -1,0 +1,59 @@
+/**
+Sankey plot
+ */
+.sankey-plot {
+    /*-fx-border-color: red;*/
+    -fx-background-color: #212121;
+    -fx-padding: 32px 152px 16px 152px;
+
+}
+
+.sankey-plot .label {
+    -fx-text-fill: #FFFFFF;
+    -fx-opacity: 0.87;
+}
+
+.sankey-plot .link {
+    -fx-fill: transparent;
+    -fx-stroke: #383838aa;
+}
+
+.sankey-plot .link:hover {
+    -fx-stroke: rgba(255, 255, 255, 0.20);
+}
+
+.sankey-plot .node {
+    -fx-fill: #860061;
+}
+
+.sankey-plot .default-color0.node {
+    -fx-fill: #f9d900;
+}
+
+.sankey-plot .default-color1.node {
+    -fx-fill: #a9e200;
+}
+
+.sankey-plot .default-color2.node {
+    -fx-fill: #22bad9;
+}
+
+.sankey-plot .default-color3.node {
+    -fx-fill: #0181e2;
+}
+
+.sankey-plot .default-color4.node {
+    -fx-fill: #2f357f;
+}
+
+.sankey-plot .default-color5.node {
+    -fx-fill: #860061;
+}
+
+.sankey-plot .default-color6.node {
+    -fx-fill: #c62b00;
+}
+
+.sankey-plot .default-color7.node {
+    -fx-fill: #ff5700;
+}
