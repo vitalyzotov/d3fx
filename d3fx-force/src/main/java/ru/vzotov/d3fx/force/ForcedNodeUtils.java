@@ -2,9 +2,11 @@ package ru.vzotov.d3fx.force;
 
 import javafx.scene.Node;
 
+import java.util.function.Supplier;
+
 public abstract class ForcedNodeUtils {
 
-    public static <N extends ForcedNode<?>> N makeDraggable(ForceAnimation<N> animation, final N fn) {
+    public static <N extends ForcedNode<?>> N makeDraggable(Supplier<ForceAnimation<N>> animation, final N fn) {
         final Node control = fn.getControl();
 
         control.setOnMousePressed(event -> {
@@ -13,7 +15,7 @@ public abstract class ForcedNodeUtils {
 
             fn.fx = fn.getX();
             fn.fy = fn.getY();
-            animation.alphaTarget(0.3).playFromStart();
+            animation.get().alphaTarget(0.3).playFromStart();
         });
 
         control.setOnMouseDragged(event -> {
@@ -30,7 +32,7 @@ public abstract class ForcedNodeUtils {
         control.setOnMouseReleased(event -> {
             fn.fx = null;
             fn.fy = null;
-            animation.alphaTarget(0);
+            animation.get().alphaTarget(0);
         });
 
         return fn;
