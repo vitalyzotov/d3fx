@@ -65,7 +65,10 @@
                     <artifactId>gitflow-maven-plugin</artifactId>
                     <version>1.13.0</version>
                     <configuration>
-                        <!-- optional configuration -->
+                        <gitFlowConfig>
+                            <productionBranch>main</productionBranch>
+                            <developmentBranch>main</developmentBranch>
+                        </gitFlowConfig>
                     </configuration>
                 </plugin>
             </plugins>
