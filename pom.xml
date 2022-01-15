@@ -6,7 +6,7 @@
 
     <groupId>ru.vzotov</groupId>
     <artifactId>d3fx</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>pom</packaging>
 
     <modules>
