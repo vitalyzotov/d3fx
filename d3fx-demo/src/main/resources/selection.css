@@ -1,0 +1,8 @@
+.root {
+    -fx-background-color: #212121;
+}
+
+.label {
+    -fx-text-fill: #FFFFFF;
+    -fx-opacity: 0.87;
+}

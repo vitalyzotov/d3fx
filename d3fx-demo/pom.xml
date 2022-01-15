@@ -30,6 +30,12 @@
         </dependency>
 
         <dependency>
+            <groupId>ru.vzotov</groupId>
+            <artifactId>d3fx-selection</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
         </dependency>
