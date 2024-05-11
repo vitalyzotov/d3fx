@@ -4,21 +4,22 @@ import java.util.List;
 
 /**
  * @param <I> type of identifier
+ * @param <V> type of value
  */
-public interface Node<I> {
+public interface Node<I, V> {
 
 
     I id();
 
     /**
-     * @return the array of outgoing links which have this node as their source
+     * @return the list of outgoing links which have this node as their source
      */
-    List<Link<I>> sourceLinks();
+    List<Link<I,V>> sourceLinks();
 
     /**
-     * @return the array of incoming links which have this node as their target
+     * @return the list of incoming links which have this node as their target
      */
-    List<Link<I>> targetLinks();
+    List<Link<I,V>> targetLinks();
 
     void clearLinks();
 
@@ -78,12 +79,12 @@ public interface Node<I> {
      * his is the sum of link.value for the node’s incoming links, or node.fixedValue if defined
      * @return The node’s value;
      */
-    Number value();
+    V value();
 
-    Number value(Number v);
+    V value(V v);
 
-    Number fixedValue();
+    V fixedValue();
 
-    void setFixedValue(Number fixedValue);
+    void setFixedValue(V fixedValue);
 
 }

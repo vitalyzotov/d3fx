@@ -3,25 +3,25 @@ package ru.vzotov.d3fx.sankey;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimpleNode<I> implements Node<I> {
+public class SimpleNode<I, V> implements Node<I, V> {
 
     /**
      * the array of outgoing links which have this node as their source
      */
-    private List<Link<I>> sourceLinks;
+    private List<Link<I,V>> sourceLinks;
 
     /**
      * the array of incoming links which have this node as their target
      */
-    private List<Link<I>> targetLinks;
+    private List<Link<I,V>> targetLinks;
 
     /**
      * The node’s value;
      * This is the sum of link.value for the node’s incoming links, or node.fixedValue if defined
      */
-    private Number value;
+    private V value;
 
-    private Number fixedValue;
+    private V fixedValue;
 
     /**
      * the node’s zero-based index within the array of nodes
@@ -65,7 +65,7 @@ public class SimpleNode<I> implements Node<I> {
 
     private final I id;
 
-    public SimpleNode(I id, Number value) {
+    public SimpleNode(I id, V value) {
         this.id = id;
         this.value = value;
     }
@@ -82,19 +82,19 @@ public class SimpleNode<I> implements Node<I> {
         return id;
     }
 
-    public List<Link<I>> sourceLinks() {
+    public List<Link<I,V>> sourceLinks() {
         return sourceLinks;
     }
 
-    protected void setSourceLinks(List<Link<I>> links) {
+    protected void setSourceLinks(List<Link<I,V>> links) {
         this.sourceLinks = links;
     }
 
-    public List<Link<I>> targetLinks() {
+    public List<Link<I,V>> targetLinks() {
         return targetLinks;
     }
 
-    protected void setTargetLinks(List<Link<I>> links) {
+    protected void setTargetLinks(List<Link<I,V>> links) {
         this.targetLinks = links;
     }
 
@@ -169,20 +169,20 @@ public class SimpleNode<I> implements Node<I> {
         this.y1 = y1;
     }
 
-    public Number value() {
+    public V value() {
         return value;
     }
 
-    public Number value(Number v) {
+    public V value(V v) {
         value = v;
         return value;
     }
 
-    public Number fixedValue() {
+    public V fixedValue() {
         return fixedValue;
     }
 
-    public void setFixedValue(Number fixedValue) {
+    public void setFixedValue(V fixedValue) {
         this.fixedValue = fixedValue;
     }
 

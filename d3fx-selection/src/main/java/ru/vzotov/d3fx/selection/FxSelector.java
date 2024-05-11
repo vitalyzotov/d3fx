@@ -25,9 +25,10 @@ import java.util.function.Function;
  * @param <D> data element type
  * @param <K> type of data identifiers
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class FxSelector<E extends Node, D, K> {
 
-    private static final String PROP_DATUM = "com.zf.home.fx.selection.DATUM";
+    private static final String PROP_DATUM = FxSelector.class.getName() + ".DATUM";
     private final ObservableList<E> children;
     private final Function<D, K> keyMapper;
     private final ListChangeListener<? super D> dataChangeListener;
@@ -81,7 +82,6 @@ public class FxSelector<E extends Node, D, K> {
 
     private final Map<K, E> index = Collections.synchronizedMap(new HashMap<>());
 
-    @SuppressWarnings("unchecked")
     public FxSelector(ObservableList<E> children, Function<D, K> keyMapper) {
         this.children = children;
         this.keyMapper = keyMapper;

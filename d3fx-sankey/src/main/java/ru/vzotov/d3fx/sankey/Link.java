@@ -6,26 +6,27 @@ package ru.vzotov.d3fx.sankey;
  *
  * @param <K> тип ссылки на ноду
  */
-public class Link<K> {
+@SuppressWarnings("UnusedReturnValue")
+public class Link<K,V> {
 
     /**
      * the link’s source node key
      */
-    private K sourceKey;
+    private final K sourceKey;
 
-    private Node<K> source;
+    private Node<K,V> source;
 
     /**
      * the link’s target node key
      */
-    private K targetKey;
+    private final K targetKey;
 
-    private Node<K> target;
+    private Node<K,V> target;
 
     /**
-     * the link’s numeric value
+     * the link’s value
      */
-    private Number value;
+    private final V value;
 
     /**
      * the link’s vertical starting position (at source node)
@@ -47,7 +48,7 @@ public class Link<K> {
      */
     private int index;
 
-    public Link(K source, K target, Number value) {
+    public Link(K source, K target, V value) {
         this.sourceKey = source;
         this.targetKey = target;
         this.value = value;
@@ -61,25 +62,25 @@ public class Link<K> {
         return targetKey;
     }
 
-    public Node<K> source() {
+    public Node<K,V> source() {
         return source;
     }
 
-    public Node<K> source(Node<K> source) {
+    public Node<K,V> source(Node<K,V> source) {
         this.source = source;
         return source;
     }
 
-    public Node<K> target() {
+    public Node<K,V> target() {
         return target;
     }
 
-    public Node<K> target(Node<K> target) {
+    public Node<K,V> target(Node<K,V> target) {
         this.target = target;
         return target;
     }
 
-    public Number value() {
+    public V value() {
         return value;
     }
 
@@ -96,6 +97,7 @@ public class Link<K> {
         return y1;
     }
 
+    @SuppressWarnings("unused")
     public double y1(double y1) {
         this.y1 = y1;
         return y1;
@@ -105,6 +107,7 @@ public class Link<K> {
         return width;
     }
 
+    @SuppressWarnings("unused")
     public double width(double width) {
         this.width = width;
         return width;

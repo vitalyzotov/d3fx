@@ -1,23 +1,20 @@
 package ru.vzotov.d3fx.sankey;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 /**
  * @param <I> type of node identifier
+ * @param <V> type of node value
  */
-public class Sankey<I> implements Graph<I> {
+@SuppressWarnings({"UnusedReturnValue", "unused"})
+public class Sankey<I, V extends Comparable<V>> implements Graph<I, V> {
 
-    public final Function<Node<I>, I> defaultId = Node::id;
+    public final Function<Node<I, V>, I> defaultId = Node::id;
 
     // extent
     private double x0 = 0;
@@ -25,53 +22,71 @@ public class Sankey<I> implements Graph<I> {
     private double x1 = 1;
     private double y1 = 1;
 
-    // nodeWidth
+    /**
+     * node width
+     */
     private double dx = 24;
+
+    /**
+     * node height
+     */
     private double dy = 8;
+
+    /**
+     * node padding
+     */
     private double py; // nodePadding
-    private Function<Node<I>, I> id = defaultId;
-    private Alignment<I> align = Align.justify();
-    private Comparator<Node<I>> sort;
-    private Comparator<Link<I>> linkSort;
-    private List<? extends Node<I>> nodes;// = defaultNodes;
-    private List<Link<I>> links;// = defaultLinks;
+    private Function<Node<I, V>, I> id = defaultId;
+    private Alignment align = Align.justify();
+    private Comparator<Node<I, V>> sort;
+    private Comparator<Link<I, V>> linkSort;
+    private List<? extends Node<I, V>> nodes;// = defaultNodes;
+    private List<Link<I, V>> links;// = defaultLinks;
     private int iterations = 6;
+    private int layers = 1;
 
-    private final Comparator<Node<I>> ascendingBreadth = (a, b) -> (int) (a.y0() - b.y0());
+    private final Comparator<Node<I, V>> ascendingBreadth = (a, b) -> (int) (a.y0() - b.y0());
 
-    private final Comparator<Link<I>> ascendingSourceBreadth = (a, b) -> {
+    private final Comparator<Link<I, V>> ascendingSourceBreadth = (a, b) -> {
         int r = ascendingBreadth.compare(a.source(), b.source());
         return r != 0 ? r : a.index() - b.index();
     };
 
-    private final Comparator<Link<I>> ascendingTargetBreadth = (a, b) -> {
+    private final Comparator<Link<I, V>> ascendingTargetBreadth = (a, b) -> {
         int r = ascendingBreadth.compare(a.target(), b.target());
         return r != 0 ? r : a.index() - b.index();
     };
 
-    public Sankey() {
+    private final ValueCalculator<V> calculator;
+
+    public Sankey(ValueCalculator<V> calculator) {
+        this.calculator = calculator;
     }
 
-    public Sankey<I> sankey() {
+    public Sankey<I, V> sankey() {
         return this.sankey(Collections::emptyList, Collections::emptyList);
     }
 
-    public Sankey<I> sankey(Supplier<? extends List<Node<I>>> nodes, Supplier<List<Link<I>>> links) {
+    public Sankey<I, V> sankey(Supplier<? extends List<Node<I, V>>> nodes, Supplier<List<Link<I, V>>> links) {
         return this.sankey(nodes.get(), links.get());
     }
 
     /**
-     * Computes the node and link positions for the given arguments, returning a graph representing the Sankey layout.
-     * The returned graph has the following properties:
+     * Computes and updates the positions and properties of nodes and links for a Sankey diagram.
+     * This method initializes and configures the internal state of the Sankey diagram based on the provided nodes and links.
+     * It applies several layout computations to determine node depths, heights, breadths, and the corresponding breadths for links.
      * <p>
-     * graph.nodes - the array of nodes
-     * graph.links - the array of links
+     * The method modifies the state of this {@code Sankey} object and returns it with updated layout information.
+     * <ul>
+     * <li>{@code graph.nodes} - An array of nodes, each node having updated layout properties.</li>
+     * <li>{@code graph.links} - An array of links, each link having updated layout properties related to its source and target nodes.</li>
+     * </ul>
      *
-     * @param nodes
-     * @param links
-     * @return
+     * @param nodes the list of nodes to be laid out in the Sankey diagram
+     * @param links the list of links between the nodes in the Sankey diagram
+     * @return this {@code Sankey} object after computing the layout
      */
-    public Sankey<I> sankey(List<? extends Node<I>> nodes, List<Link<I>> links) {
+    public Sankey<I, V> sankey(List<? extends Node<I, V>> nodes, List<Link<I, V>> links) {
         this.nodes = nodes;
         this.links = links;
         var graph = this;
@@ -84,23 +99,27 @@ public class Sankey<I> implements Graph<I> {
         return this;
     }
 
+    public int layers() {
+        return layers;
+    }
+
     @Override
-    public Function<Node<I>, I> id() {
+    public Function<Node<I, V>, I> id() {
         return id;
     }
 
     @Override
-    public Comparator<Link<I>> linkSort() {
+    public Comparator<Link<I, V>> linkSort() {
         return linkSort;
     }
 
     @Override
-    public List<? extends Node<I>> nodes() {
+    public List<? extends Node<I, V>> nodes() {
         return nodes;
     }
 
     @Override
-    public List<Link<I>> links() {
+    public List<Link<I, V>> links() {
         return links;
     }
 
@@ -113,38 +132,35 @@ public class Sankey<I> implements Graph<I> {
      * link.y1 - the link’s vertical end position (at target node)
      * This method is intended to be called after computing the initial Sankey layout,
      * for example when the diagram is repositioned interactively.
-     *
-     * @param graph
-     * @return
      */
-    public Graph<I> update(Graph<I> graph) {
+    public Graph<I, V> update(Graph<I, V> graph) {
         computeLinkBreadths(graph);
         return graph;
     }
 
-    public Function<Node<I>, I> getNodeId() {
+    public Function<Node<I, V>, I> getNodeId() {
         return id;
     }
 
-    public Sankey<I> setNodeId(Function<Node<I>, I> nodeId) {
+    public Sankey<I, V> setNodeId(Function<Node<I, V>, I> nodeId) {
         this.id = nodeId;
         return this;
     }
 
-    public Alignment<I> getNodeAlign() {
+    public Alignment getNodeAlign() {
         return align;
     }
 
-    public Sankey<I> setNodeAlign(Alignment<I> align) {
+    public Sankey<I, V> setNodeAlign(Alignment align) {
         this.align = align;
         return this;
     }
 
-    public Comparator<? super Node<I>> getNodeSort() {
+    public Comparator<? super Node<I, V>> getNodeSort() {
         return sort;
     }
 
-    public Sankey<I> setNodeSort(Comparator<Node<I>> sort) {
+    public Sankey<I, V> setNodeSort(Comparator<Node<I, V>> sort) {
         this.sort = sort;
         return this;
     }
@@ -153,7 +169,7 @@ public class Sankey<I> implements Graph<I> {
         return dx;
     }
 
-    public Sankey<I> setNodeWidth(double dx) {
+    public Sankey<I, V> setNodeWidth(double dx) {
         this.dx = dx;
         return this;
     }
@@ -162,35 +178,35 @@ public class Sankey<I> implements Graph<I> {
         return dy;
     }
 
-    public Sankey<I> setNodePadding(double dy) {
+    public Sankey<I, V> setNodePadding(double dy) {
         this.dy = dy;
         this.py = dy;
         return this;
     }
 
-    public List<? extends Node<I>> getNodes() {
+    public List<? extends Node<I, V>> getNodes() {
         return nodes;
     }
 
-    public Sankey<I> setNodes(List<? extends Node<I>> nodes) {
+    public Sankey<I, V> setNodes(List<? extends Node<I, V>> nodes) {
         this.nodes = nodes;
         return this;
     }
 
-    public List<? super Link<I>> getLinks() {
+    public List<? super Link<I, V>> getLinks() {
         return links;
     }
 
-    public Sankey<I> setLinks(List<Link<I>> links) {
+    public Sankey<I, V> setLinks(List<Link<I, V>> links) {
         this.links = links;
         return this;
     }
 
-    public Comparator<? super Link<I>> getLinkSort() {
+    public Comparator<? super Link<I, V>> getLinkSort() {
         return linkSort;
     }
 
-    public Sankey<I> setLinkSort(Comparator<Link<I>> linkSort) {
+    public Sankey<I, V> setLinkSort(Comparator<Link<I, V>> linkSort) {
         this.linkSort = linkSort;
         return this;
     }
@@ -199,7 +215,7 @@ public class Sankey<I> implements Graph<I> {
         return new Size(x1 - x0, y1 - y0);
     }
 
-    public Sankey<I> setSize(double width, double height) {
+    public Sankey<I, V> setSize(double width, double height) {
         this.x0 = 0;
         this.y0 = 0;
         this.x1 = width;
@@ -207,7 +223,7 @@ public class Sankey<I> implements Graph<I> {
         return this;
     }
 
-    public Sankey<I> setSize(Size size) {
+    public Sankey<I, V> setSize(Size size) {
         return setSize(size.width(), size.height());
     }
 
@@ -215,7 +231,7 @@ public class Sankey<I> implements Graph<I> {
         return new Extent(x0, y0, x1, y1);
     }
 
-    public Sankey<I> setExtent(double x0, double y0, double x1, double y1) {
+    public Sankey<I, V> setExtent(double x0, double y0, double x1, double y1) {
         this.x0 = x0;
         this.y0 = y1;
         this.x1 = x1;
@@ -223,7 +239,7 @@ public class Sankey<I> implements Graph<I> {
         return this;
     }
 
-    public Sankey<I> setExtent(Extent extent) {
+    public Sankey<I, V> setExtent(Extent extent) {
         return setExtent(extent.x0(), extent.y0(), extent.x1(), extent.y1());
     }
 
@@ -231,68 +247,73 @@ public class Sankey<I> implements Graph<I> {
         return iterations;
     }
 
-    public Sankey<I> setIterations(int iterations) {
+    public Sankey<I, V> setIterations(int iterations) {
         this.iterations = iterations;
         return this;
     }
 
     ///////////////////////////////////////////////
 
-    private void computeNodeLinks(Graph<I> graph) {
-        List<? extends Node<I>> nodes = graph.nodes();
-        List<Link<I>> links = graph.links();
+    private void computeNodeLinks(Graph<I, V> graph) {
+        List<? extends Node<I, V>> nodes = graph.nodes();
+        List<Link<I, V>> links = graph.links();
 
         int i = 0;
-        for (Node<I> node : nodes) {
+        for (Node<I, V> node : nodes) {
             node.setIndex(i++);
             node.clearLinks();
         }
 
         //const nodeById = new Map(nodes.map((d, i) => [id(d, i, nodes), d]));
-        Map<I, Node<I>> nodeById = nodes.stream().collect(Collectors.toMap(graph.id(), Function.identity()));
+        Map<I, Node<I, V>> nodeById = nodes.stream().collect(Collectors.toMap(graph.id(), Function.identity()));
 
         i = 0;
-        for (Link<I> link : links) {
+        for (Link<I, V> link : links) {
             link.index(i++);
             I sourceId = link.sourceKey();
             I targetId = link.targetKey();
-            Node<I> source = link.source();
-            Node<I> target = link.target();
+            Node<I, V> source = link.source();
+            Node<I, V> target = link.target();
             if (sourceId != null) source = link.source(nodeById.get(sourceId));
             if (targetId != null) target = link.target(nodeById.get(targetId));
             source.sourceLinks().add(link);
             target.targetLinks().add(link);
         }
 
-        final Comparator<Link<I>> linkSort = graph.linkSort();
+        final Comparator<Link<I, V>> linkSort = graph.linkSort();
         if (linkSort != null) {
-            for (Node<I> node : nodes) {
+            for (Node<I, V> node : nodes) {
                 node.sourceLinks().sort(linkSort);
                 node.targetLinks().sort(linkSort);
             }
         }
     }
 
-    private void computeNodeValues(Graph<I> graph) {
-        List<? extends Node<I>> nodes = graph.nodes();
+    private void computeNodeValues(Graph<I, V> graph) {
+        List<? extends Node<I, V>> nodes = graph.nodes();
         for (var node : nodes) {
             node.value(node.fixedValue() == null ?
-                    DoubleStream.of(
-                            node.sourceLinks().stream().map(Link::value).mapToDouble(Number::doubleValue).sum(),
-                            node.targetLinks().stream().map(Link::value).mapToDouble(Number::doubleValue).sum()
-                    ).max().orElse(Double.NaN)
+                    Stream.of(
+                                    node.sourceLinks().stream().map(Link::value).reduce(calculator::sum).orElse(null),
+                                    node.targetLinks().stream().map(Link::value).reduce(calculator::sum).orElse(null))
+                            .filter(Objects::nonNull)
+                            .max(Comparator.naturalOrder())
+                            .orElse(null)
                     : node.fixedValue());
         }
     }
 
-    private void computeNodeDepths(Graph<I> graph) {
-        List<? extends Node<I>> nodes = graph.nodes();
+    /**
+     * Computes the depth of each node.
+     */
+    private void computeNodeDepths(Graph<I, V> graph) {
+        List<? extends Node<I, V>> nodes = graph.nodes();
         int n = nodes.size();
-        Set<Node<I>> current = new HashSet<>(nodes);
-        Set<Node<I>> next = new HashSet<>();
+        Set<Node<I, V>> current = new HashSet<>(nodes);
+        Set<Node<I, V>> next = new HashSet<>();
         int x = 0;
         while (!current.isEmpty()) {
-            for (Node<I> node : current) {
+            for (var node : current) {
                 node.setDepth(x);
                 node.sourceLinks().stream().map(Link::target).forEach(next::add);
             }
@@ -302,34 +323,34 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    private void computeNodeHeights(Graph<I> graph) {
-        List<? extends Node<I>> nodes = graph.nodes();
+    private void computeNodeHeights(Graph<I, V> graph) {
+        List<? extends Node<I, V>> nodes = graph.nodes();
         int n = nodes.size();
-        Set<Node<I>> current = new HashSet<>(nodes);
-        Set<Node<I>> next = new HashSet<>();
-        int x = 0;
+        Set<Node<I, V>> current = new HashSet<>(nodes);
+        Set<Node<I, V>> next = new HashSet<>();
+        int i = 0;
         while (!current.isEmpty()) {
-            for (Node<I> node : current) {
-                node.setHeight(x);
+            for (var node : current) {
+                node.setHeight(i);
                 node.targetLinks().stream().map(Link::source).forEach(next::add);
             }
-            if (++x > n) throw new RuntimeException("circular link");
+            if (++i > n) throw new RuntimeException("circular link");
             current = next;
             next = new HashSet<>();
         }
     }
 
-    private List<List<Node<I>>> computeNodeLayers(Graph<I> graph) {
-        List<? extends Node<I>> nodes = graph.nodes();
-        int x = nodes.stream().mapToInt(Node::depth).max().orElse(0) + 1;
-        double kx = (x1 - x0 - dx) / (x - 1);
+    private List<List<Node<I, V>>> computeNodeLayers(Graph<I, V> graph) {
+        var nodes = graph.nodes();
+        this.layers = nodes.stream().mapToInt(Node::depth).max().orElse(0) + 1;
+        double layerWidth = computeLayerWidth();
 
-        List<List<Node<I>>> columns = new ArrayList<>(Collections.nCopies(x, null));
+        List<List<Node<I, V>>> columns = new ArrayList<>(Collections.nCopies(layers, null));
         for (var node : nodes) {
-            int i = (int) Math.max(0, Math.min(x - 1, Math.floor(align.align(node, x))));
+            int i = Math.max(0, Math.min(layers - 1, align.align(node, layers)));
             node.setLayer(i);
 
-            double nx0 = x0 + i * kx;
+            double nx0 = x0 + i * layerWidth;
             node.setHorizontalPosition(nx0, nx0 + dx);
 
             if (columns.get(i) != null) {
@@ -339,17 +360,21 @@ public class Sankey<I> implements Graph<I> {
             }
         }
         if (sort != null) {
-            for (List<Node<I>> column : columns) {
+            for (var column : columns) {
                 column.sort(sort);
             }
         }
         return columns;
     }
 
-    private void initializeNodeBreadths(List<List<Node<I>>> columns) {
+    public double computeLayerWidth() {
+        return (x1 - x0 - dx) / (layers - 1);
+    }
+
+    private void initializeNodeBreadths(List<List<Node<I, V>>> columns) {
         double ky = columns.stream()
                 .mapToDouble(c -> {
-                    double sum = c.stream().map(Node::value).mapToDouble(Number::doubleValue).sum();
+                    double sum = c.stream().map(Node::value).mapToDouble(calculator::toDouble).sum();
                     return (y1 - y0 - (c.size() - 1) * py) / sum;
                 })
                 .min()
@@ -358,10 +383,10 @@ public class Sankey<I> implements Graph<I> {
         for (var nodes : columns) {
             double y = y0;
             for (var node : nodes) {
-                node.setVerticalPosition(y, y + node.value().doubleValue() * ky);
+                node.setVerticalPosition(y, y + calculator.toDouble(node.value()) * ky);
                 y = node.y1() + py;
                 for (var link : node.sourceLinks()) {
-                    link.width(link.value().doubleValue() * ky);
+                    link.width(calculator.toDouble(link.value()) * ky);
                 }
             }
             y = (y1 - y + py) / (nodes.size() + 1);
@@ -373,8 +398,8 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    private void computeNodeBreadths(Graph<I> graph) {
-        List<List<Node<I>>> columns = computeNodeLayers(graph);
+    private void computeNodeBreadths(Graph<I, V> graph) {
+        List<List<Node<I, V>>> columns = computeNodeLayers(graph);
         py = Math.min(dy,
                 (y1 - y0) / (
                         columns.stream().mapToInt(List::size).max().orElse(0) - 1
@@ -389,16 +414,15 @@ public class Sankey<I> implements Graph<I> {
     }
 
     // Reposition each node based on its incoming (target) links.
-    private void relaxLeftToRight(List<List<Node<I>>> columns, double alpha, double beta) {
+    private void relaxLeftToRight(List<List<Node<I, V>>> columns, double alpha, double beta) {
         for (int i = 1, n = columns.size(); i < n; ++i) {
             var column = columns.get(i);
-            for (Node<I> target : column) {
+            for (Node<I, V> target : column) {
                 double y = 0d;
                 double w = 0d;
                 for (var link : target.targetLinks()) {
                     var source = link.source();
-                    var value = link.value().doubleValue();
-                    double v = value * (target.layer() - source.layer());
+                    double v = calculator.toDouble(link.value()) * (target.layer() - source.layer());
                     y += targetTop(source, target) * v;
                     w += v;
                 }
@@ -412,17 +436,19 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    // Reposition each node based on its outgoing (source) links.
-    private void relaxRightToLeft(List<List<Node<I>>> columns, double alpha, double beta) {
+
+    /**
+     * Reposition each node based on its outgoing (source) links.
+     */
+    private void relaxRightToLeft(List<List<Node<I, V>>> columns, double alpha, double beta) {
         for (int n = columns.size(), i = n - 2; i >= 0; --i) {
             var column = columns.get(i);
-            for (Node<I> source : column) {
+            for (var source : column) {
                 double y = 0;
                 double w = 0;
                 for (var link : source.sourceLinks()) {
                     var target = link.target();
-                    var value = link.value().doubleValue();
-                    var v = value * (target.layer() - source.layer());
+                    var v = calculator.toDouble(link.value()) * (target.layer() - source.layer());
                     y += sourceTop(source, target) * v;
                     w += v;
                 }
@@ -436,7 +462,7 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    private void resolveCollisions(List<Node<I>> nodes, double alpha) {
+    private void resolveCollisions(List<Node<I, V>> nodes, double alpha) {
         int i = nodes.size() >> 1;
         var subject = nodes.get(i);
         resolveCollisionsBottomToTop(nodes, subject.y0() - py, i - 1, alpha);
@@ -446,7 +472,7 @@ public class Sankey<I> implements Graph<I> {
     }
 
     // Push any overlapping nodes down.
-    private void resolveCollisionsTopToBottom(List<Node<I>> nodes, double y, int i, double alpha) {
+    private void resolveCollisionsTopToBottom(List<Node<I, V>> nodes, double y, int i, double alpha) {
         for (; i < nodes.size(); ++i) {
             var node = nodes.get(i);
             double dy = (y - node.y0()) * alpha;
@@ -458,7 +484,7 @@ public class Sankey<I> implements Graph<I> {
     }
 
     // Push any overlapping nodes up.
-    private void resolveCollisionsBottomToTop(List<Node<I>> nodes, double y, int i, double alpha) {
+    private void resolveCollisionsBottomToTop(List<Node<I, V>> nodes, double y, int i, double alpha) {
         for (; i >= 0; --i) {
             var node = nodes.get(i);
             double dy = (node.y1() - y) * alpha;
@@ -469,9 +495,9 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    private void reorderNodeLinks(Node<I> node) {
-        final List<Link<I>> sourceLinks = node.sourceLinks();
-        final List<Link<I>> targetLinks = node.targetLinks();
+    private void reorderNodeLinks(Node<I, V> node) {
+        final var sourceLinks = node.sourceLinks();
+        final var targetLinks = node.targetLinks();
         if (linkSort == null) {
             targetLinks.stream().map(link -> link.source().sourceLinks()).forEach(links -> {
                 links.sort(ascendingTargetBreadth);
@@ -482,9 +508,9 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    private void reorderLinks(List<Node<I>> nodes) {
+    private void reorderLinks(List<Node<I, V>> nodes) {
         if (linkSort == null) {
-            for (Node<I> node : nodes) {
+            for (var node : nodes) {
                 node.sourceLinks().sort(ascendingTargetBreadth);
                 node.targetLinks().sort(ascendingSourceBreadth);
             }
@@ -492,15 +518,15 @@ public class Sankey<I> implements Graph<I> {
     }
 
     // Returns the target.y0 that would produce an ideal link from source to target.
-    private double targetTop(Node<I> source, Node<I> target) {
-        double y = source.y0() - (source.sourceLinks().size() - 1) * py / 2;
+    private double targetTop(Node<I, V> source, Node<I, V> target) {
+        double i = source.y0() - (source.sourceLinks().size() - 1) * py / 2;
 
         for (var link : source.sourceLinks()) {
             var node = link.target();
             double width = link.width();
 
             if (node == target) break;
-            y += width + py;
+            i += width + py;
         }
 
         for (var link : target.targetLinks()) {
@@ -508,21 +534,23 @@ public class Sankey<I> implements Graph<I> {
             double width = link.width();
 
             if (node == source) break;
-            y -= width;
+            i -= width;
         }
-        return y;
+        return i;
     }
 
-    // Returns the source.y0 that would produce an ideal link from source to target.
-    private double sourceTop(Node<I> source, Node<I> target) {
-        double y = target.y0() - (target.targetLinks().size() - 1) * py / 2;
+    /**
+     * Returns the source.y0 that would produce an ideal link from source to target.
+     */
+    private double sourceTop(Node<I, V> source, Node<I, V> target) {
+        double i = target.y0() - (target.targetLinks().size() - 1) * py / 2;
 
         for (var link : target.targetLinks()) {
             var node = link.source();
             double width = link.width();
 
             if (node == source) break;
-            y += width + py;
+            i += width + py;
         }
 
         for (var link : source.sourceLinks()) {
@@ -530,18 +558,18 @@ public class Sankey<I> implements Graph<I> {
             double width = link.width();
 
             if (node == target) break;
-            y -= width;
+            i -= width;
         }
 
-        return y;
+        return i;
     }
 
-    private void computeLinkBreadths(Graph<I> graph) {
-        List<? extends Node<I>> nodes = graph.nodes();
-        for (Node<I> node : nodes) {
+    private void computeLinkBreadths(Graph<I, V> graph) {
+        var nodes = graph.nodes();
+        for (var node : nodes) {
             double y0 = node.y0();
             double y1 = y0;
-            for (Link<I> link : node.sourceLinks()) {
+            for (var link : node.sourceLinks()) {
                 link.y0(y0 + link.width() / 2);
                 y0 += link.width();
             }
@@ -552,51 +580,65 @@ public class Sankey<I> implements Graph<I> {
         }
     }
 
-    public static class Size {
-        private final double width;
-        private final double height;
+    public record Size(double width, double height) {
+    }
 
-        public Size(double width, double height) {
-            this.width = width;
-            this.height = height;
+    public record Extent(double x0, double y0, double x1, double y1) {
+    }
+
+    public interface ValueCalculator<V> {
+        /**
+         * Calculates the sum of two values.
+         *
+         * @param v1 The first value. Nullable.
+         * @param v2 The second value. Nullable.
+         * @return The sum of the two values.
+         */
+        V sum(V v1, V v2);
+
+        /**
+         * Calculates the fraction of two values.
+         *
+         * @param dividend the dividend
+         * @param divisor  the divisor
+         * @return The fraction of the two values. {@code null} if the dividend is null.
+         * {@code NaN} if the divisor is null.
+         */
+        Double divide(V dividend, V divisor);
+
+        /**
+         * Converts a value to a double. This is used for relative positioning.
+         *
+         * @param v The value
+         * @return The double value. {@code null} if the value is null.
+         */
+        Double toDouble(V v);
+    }
+
+    public static class NumberValueCalculator<V extends Number> implements ValueCalculator<V> {
+
+        private final BinaryOperator<V> plus;
+
+        public NumberValueCalculator(BinaryOperator<V> plus) {
+            this.plus = plus;
         }
 
-        public double width() {
-            return width;
+        @Override
+        public V sum(V v1, V v2) {
+            return v1 == null ? v2 : v2 == null ? v1 : plus.apply(v1, v2);
         }
 
-        public double height() {
-            return height;
+        @Override
+        public Double divide(Number dividend, Number divisor) {
+            return dividend == null ? null :
+                    divisor == null ? Double.NaN :
+                            dividend.doubleValue() / divisor.doubleValue();
+        }
+
+        @Override
+        public Double toDouble(Number number) {
+            return number == null ? null : number.doubleValue();
         }
     }
 
-    public static class Extent {
-        private final double x0;
-        private final double y0;
-        private final double x1;
-        private final double y1;
-
-        public Extent(double x0, double y0, double x1, double y1) {
-            this.x0 = x0;
-            this.y0 = y0;
-            this.x1 = x1;
-            this.y1 = y1;
-        }
-
-        public double x0() {
-            return x0;
-        }
-
-        public double x1() {
-            return x1;
-        }
-
-        public double y0() {
-            return y0;
-        }
-
-        public double y1() {
-            return y1;
-        }
-    }
 }

@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import ru.vzotov.d3fx.sankey.Link;
+import ru.vzotov.d3fx.sankey.Sankey;
 import ru.vzotov.d3fx.sankeychart.SankeyPlot;
 import ru.vzotov.d3fx.sankeychart.SankeyPlot.Data;
 
@@ -31,6 +32,8 @@ import java.util.stream.StreamSupport;
 
 public class SankeyChartDemo extends Application {
 
+    public static final Sankey.ValueCalculator<Double> DOUBLE_CALCULATOR = new Sankey.NumberValueCalculator<>(Double::sum);
+
     private static final double SCENE_HEIGHT = 1080;
     private static final double SCENE_WIDTH = 1920;
     private static final Supplier<Label> GLOW_LABEL = () -> {
@@ -39,9 +42,9 @@ public class SankeyChartDemo extends Application {
         return label;
     };
 
-    private static List<Data> nodes;
+    private static List<Data<String, Double>> nodes;
 
-    private static List<Link<String>> links;
+    private static List<Link<String, Double>> links;
 
     public static void main(String[] args) throws IOException {
         try (Reader in = new InputStreamReader(Objects.requireNonNull(SankeyChartDemo.class.getResourceAsStream("/energy.csv")), StandardCharsets.UTF_8)) {
@@ -55,10 +58,10 @@ public class SankeyChartDemo extends Application {
             final DecimalFormat decimals = new DecimalFormat("###.##", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
             links = StreamSupport.stream(records.spliterator(), false).map(record -> {
                 try {
-                    return (Link<String>) new SankeyPlot.DataLink(
+                    return (Link<String, Double>) new SankeyPlot.DataLink<>(
                             record.get("source"),
                             record.get("target"),
-                            decimals.parse(record.get("value"))
+                            decimals.parse(record.get("value")).doubleValue()
                     );
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
@@ -66,7 +69,7 @@ public class SankeyChartDemo extends Application {
             }).toList();
         }
 
-        nodes = links.stream().<Data>mapMulti((link, consumer) -> {
+        nodes = links.stream().<Data<String, Double>>mapMulti((link, consumer) -> {
                     consumer.accept(new DemoNode(
                             link.sourceKey(),
                             link.value(),
@@ -96,7 +99,8 @@ public class SankeyChartDemo extends Application {
 
         final Pane rootPane = new StackPane();
 
-        final SankeyPlot chart = new SankeyPlot(GLOW_LABEL, GLOW_LABEL);
+        final SankeyPlot<String, Double> chart =
+                new SankeyPlot<>(String::concat, DOUBLE_CALCULATOR, GLOW_LABEL, GLOW_LABEL, Label::new);
         chart.setData(nodes, links);
 
         final BorderPane borderPane = new BorderPane(chart);
@@ -110,8 +114,8 @@ public class SankeyChartDemo extends Application {
     }
 
 
-    private static class DemoNode extends Data {
-        public DemoNode(String id, Number value, String name) {
+    private static class DemoNode extends Data<String, Double> {
+        public DemoNode(String id, Double value, String name) {
             super(id, value, name);
         }
     }

@@ -2,10 +2,12 @@
 Sankey plot
  */
 .sankey-plot {
-    /*-fx-border-color: red;*/
     -fx-background-color: #212121;
-    -fx-padding: 32px 152px 16px 152px;
+    -fx-padding: 16px 152px 16px 152px;
+}
 
+.sankey-plot .sankey-header {
+    -fx-padding: 8px 0 4px 0;
 }
 
 .sankey-plot .label {

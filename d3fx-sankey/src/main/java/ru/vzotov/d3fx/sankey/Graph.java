@@ -7,18 +7,18 @@ import java.util.function.Function;
 /**
  * @param <I> Type of node identifier
  */
-public interface Graph<I> {
+public interface Graph<I, V> {
 
     /**
      * Mapping function to get node identifier
      *
      * @return mapping function for node identifier
      */
-    Function<Node<I>, I> id();
+    Function<Node<I, V>, I> id();
 
-    Comparator<Link<I>> linkSort();
+    Comparator<Link<I, V>> linkSort();
 
-    List<? extends Node<I>> nodes();
+    List<? extends Node<I, V>> nodes();
 
-    List<Link<I>> links();
+    List<Link<I, V>> links();
 }
