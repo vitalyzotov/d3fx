@@ -20,19 +20,16 @@
         <dependency>
             <groupId>ru.vzotov</groupId>
             <artifactId>d3fx-sankey-chart</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>ru.vzotov</groupId>
             <artifactId>d3fx-force</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>ru.vzotov</groupId>
             <artifactId>d3fx-selection</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

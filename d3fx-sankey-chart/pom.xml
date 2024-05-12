@@ -19,17 +19,14 @@
         <dependency>
             <groupId>ru.vzotov</groupId>
             <artifactId>d3fx-sankey</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.vzotov</groupId>
             <artifactId>d3fx-shape</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.vzotov</groupId>
             <artifactId>d3fx-selection</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <!-- JavaFx -->
         <dependency>
