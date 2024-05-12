@@ -5,7 +5,7 @@
     <parent>
         <artifactId>d3fx-parent</artifactId>
         <groupId>ru.vzotov</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.1</version>
         <relativePath>../d3fx-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
