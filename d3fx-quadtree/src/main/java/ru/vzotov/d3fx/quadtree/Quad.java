@@ -1,5 +1,11 @@
 package ru.vzotov.d3fx.quadtree;
 
+/**
+ * Represents a quadrant in a quadtree, encapsulating a node and its spatial bounds.
+ *
+ * @param <E> the type of elements stored in the quadtree
+ * @param <Q> the specific type of QuadNode used in the quadtree
+ */
 public class Quad<E,Q extends QuadNode<E,Q>> {
     Q node;
     double x0;

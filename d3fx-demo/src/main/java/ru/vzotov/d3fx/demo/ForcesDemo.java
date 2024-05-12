@@ -9,15 +9,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
-import ru.vzotov.d3fx.force.CollideForce;
-import ru.vzotov.d3fx.force.ForceAnimation;
-import ru.vzotov.d3fx.force.ForcedNode;
-import ru.vzotov.d3fx.force.ForcedNodeUtils;
-import ru.vzotov.d3fx.force.Link;
-import ru.vzotov.d3fx.force.LinkForce;
-import ru.vzotov.d3fx.force.ManyBodyForce;
-import ru.vzotov.d3fx.force.XForce;
-import ru.vzotov.d3fx.force.YForce;
+import ru.vzotov.d3fx.force.*;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,6 +17,18 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * The {@code ForcesDemo} class demonstrates the application of simulated physical forces on elements
+ * in a JavaFX application to create dynamic and interactive visualizations. This class showcases
+ * the use of force-directed graphs and animations to represent complex systems such as gravitational
+ * fields or electrical forces in an educational context.
+ * <p>
+ * Key features demonstrated include:
+ * - Collision detection and resolution using {@code CollideForce}.
+ * - Simulated physical links between nodes with {@code LinkForce}.
+ * - Attractive and repulsive forces among nodes using {@code ManyBodyForce}.
+ * - Stabilization of nodes at specific positions using {@code XForce} and {@code YForce}.
+ */
 public class ForcesDemo extends Application {
 
     private static final double SCENE_WIDTH = 800;

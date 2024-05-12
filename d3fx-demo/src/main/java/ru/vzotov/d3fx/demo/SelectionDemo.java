@@ -19,6 +19,20 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * The {@code SelectionDemo} class demonstrates the use of the {@code d3fx-selection} module
+ * to dynamically manage and animate JavaFX nodes based on data binding and transitions.
+ * This application showcases how to bind a list of letters to labels within a JavaFX pane,
+ * applying enter, update, and exit strategies to handle how these labels are created, updated,
+ * and removed as the underlying data changes over time.
+ * <p>
+ * The demo uses a {@link FxSelector} to bind a list of characters to {@link Label} nodes in a {@link Pane},
+ * and animates these labels as they enter, update, and exit the scene. The animation involves moving the labels
+ * vertically and changing their colors to indicate their state (new, updated, or exiting).
+ * <p>
+ * This example serves as a practical illustration of implementing data-driven visual elements in a JavaFX application,
+ * leveraging the concepts inspired by the D3.js library's selection mechanism.
+ */
 public class SelectionDemo extends Application {
     public static final double SCENE_WIDTH = 1024;
     public static final double SCENE_HEIGHT = 768;
