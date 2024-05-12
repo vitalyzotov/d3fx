@@ -18,16 +18,26 @@
         <module>d3fx-selection</module>
         <module>d3fx-sankey-chart</module>
         <module>d3fx-demo</module>
+        <module>d3fx-parent</module>
     </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
-        <javafx.version>17.0.1</javafx.version>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <!-- do not deploy aggregator -->
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -63,7 +73,7 @@
                 <plugin>
                     <groupId>com.amashchenko.maven.plugin</groupId>
                     <artifactId>gitflow-maven-plugin</artifactId>
-                    <version>1.13.0</version>
+                    <version>1.20.0</version>
                     <configuration>
                         <gitFlowConfig>
                             <productionBranch>main</productionBranch>
@@ -74,50 +84,4 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- JavaFX -->
-            <dependency>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-base</artifactId>
-                <version>${javafx.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-controls</artifactId>
-                <version>${javafx.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-graphics</artifactId>
-                <version>${javafx.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <distributionManagement>
-        <repository>
-            <id>vzotov-releases</id>
-            <url>https://maven.vzotov.ru/repository/maven-everyone</url>
-        </repository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>vzotov-releases</id>
-            <url>https://maven.vzotov.ru/repository/maven-everyone</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
 </project>
