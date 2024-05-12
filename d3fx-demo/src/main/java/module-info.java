@@ -1,3 +1,6 @@
+/**
+ * Examples
+ */
 module d3fx.demo {
     requires javafx.graphics;
     requires javafx.controls;

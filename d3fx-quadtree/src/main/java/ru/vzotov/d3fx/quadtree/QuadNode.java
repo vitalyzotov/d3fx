@@ -2,6 +2,12 @@ package ru.vzotov.d3fx.quadtree;
 
 import java.util.Arrays;
 
+/**
+ * Represents a node in a quadtree structure, which can either be an internal node or a leaf node.
+ *
+ * @param <E> the type of elements stored in the quadtree
+ * @param <Q> the specific type of QuadNode, allowing for extension and customization of nodes
+ */
 public class QuadNode<E, Q extends QuadNode<E, Q>> {
     private final Object[] children;
     public E data;

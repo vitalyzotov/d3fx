@@ -30,6 +30,20 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * The {@code SankeyChartDemo} class demonstrates the use of the {@code SankeyPlot} component
+ * in a JavaFX application to visualize energy or material transfers between different nodes
+ * using a Sankey diagram. This class reads data from a CSV file and constructs a Sankey diagram
+ * to represent the flow of values between sources and targets.
+ * <p>
+ * The demonstration includes interactive elements allowing users to explore different paths
+ * and flows within the diagram. The class also showcases the ability to customize node labels
+ * with effects like glow for enhanced visual appeal.
+ * <p>
+ * This class serves as an example of integrating complex data-driven visualizations into JavaFX
+ * applications, leveraging the {@code SankeyPlot} component for effective and engaging representations
+ * of flow data.
+ */
 public class SankeyChartDemo extends Application {
 
     public static final Sankey.ValueCalculator<Double> DOUBLE_CALCULATOR = new Sankey.NumberValueCalculator<>(Double::sum);
