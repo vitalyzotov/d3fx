@@ -27,8 +27,8 @@ import java.util.stream.IntStream;
 
 public class ForcesDemo extends Application {
 
-    private static final double SCENE_WIDTH = 1920;
-    private static final double SCENE_HEIGHT = 1080;
+    private static final double SCENE_WIDTH = 800;
+    private static final double SCENE_HEIGHT = 600;
 
     private Pane root;
 
@@ -101,29 +101,29 @@ public class ForcesDemo extends Application {
     }
 
     private static final double[] INIT_X = new double[]{
-            1876,
-            812,
-            1735,
-            828,
-            685,
-            812,
-            235,
-            938,
-            690,
-            416
+            1316,
+            252,
+            1175,
+            268,
+            125,
+            252,
+            -325,
+            378,
+            130,
+            -144
     };
 
     private static final double[] INIT_Y = new double[]{
-            889,
-            690,
-            536,
-            598,
-            297,
-            946,
-            790,
-            282,
-            160,
-            591
+            649,
+            450,
+            296,
+            358,
+            57,
+            706,
+            550,
+            42,
+            -80,
+            351
     };
 
     private Link<Node, ForcedNode<Node>> createLink(List<ForcedNode<Node>> controls, int sourceIndex, int targetIndex) {
